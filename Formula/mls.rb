@@ -7,10 +7,10 @@ class Mls < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/thepushkarp/mls/releases/download/v#{version}/mls-v#{version}-aarch64-apple-darwin.tar.gz"
-      sha256 "PLACEHOLDER"
+      sha256 "b6ccf6a4a9f4c46e90399416e2e2244753c059ebe66cdb34d745289e19d89f23"
     elsif Hardware::CPU.intel?
       url "https://github.com/thepushkarp/mls/releases/download/v#{version}/mls-v#{version}-x86_64-apple-darwin.tar.gz"
-      sha256 "PLACEHOLDER"
+      sha256 "3d6eb486b248f9a0e7b4af816997b9ee89868d8d6dca9a064292694dff5c28e0"
     end
   end
 
