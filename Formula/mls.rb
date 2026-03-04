@@ -1,16 +1,16 @@
 class Mls < Formula
   desc "Terminal-native audio/video/image file browser with TUI preview and JSON output"
   homepage "https://github.com/thepushkarp/mls"
-  version "0.0.1"
+  version "0.0.2"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/thepushkarp/mls/releases/download/v#{version}/mls-v#{version}-aarch64-apple-darwin.tar.gz"
-      sha256 "b6ccf6a4a9f4c46e90399416e2e2244753c059ebe66cdb34d745289e19d89f23"
+      sha256 "ebfce47144e7a091baf1861ff98a16d2781a4494060699e0fc4395526f1f3f5e"
     elsif Hardware::CPU.intel?
       url "https://github.com/thepushkarp/mls/releases/download/v#{version}/mls-v#{version}-x86_64-apple-darwin.tar.gz"
-      sha256 "3d6eb486b248f9a0e7b4af816997b9ee89868d8d6dca9a064292694dff5c28e0"
+      sha256 "7ede35abc687b7a8cb5ddb3ceddc9af6b1b9d9d1adbfcf6b2592c957f9b75ec1"
     end
   end
 
