@@ -26,6 +26,11 @@ jobs:
             -e "/intel/,\${ 0,/sha256 \".*\"/{s/sha256 \".*\"/sha256 \"${X86_64_SHA256}\"/} }" \
             Formula/mls.rb
 
+      - name: Verify formula
+        run: |
+          grep -q 'depends_on "ffmpeg"' Formula/mls.rb
+          grep -q 'depends_on "mpv"' Formula/mls.rb
+
       - name: Commit and push
         env:
           VERSION: ${{ github.event.client_payload.version }}
