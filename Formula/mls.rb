@@ -16,6 +16,7 @@ class Mls < Formula
 
   depends_on :macos
   depends_on "ffmpeg"
+  depends_on "mpv"
 
   def install
     bin.install "mls"
