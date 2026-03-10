@@ -8,9 +8,9 @@ Homebrew formulae for [mls](https://github.com/thepushkarp/mls) — terminal-nat
 brew install thepushkarp/tap/mls
 ```
 
-This formula installs `ffmpeg` and `mpv`, so metadata probing and playback work
-on a fresh Brew install. Install `trash` separately if you want safe delete in
-triage mode:
+This formula installs `ffmpeg` and `mpv` to support metadata probing and playback.
+
+For safe delete functionality in triage mode, you can optionally install `trash`:
 
 ```bash
 brew install trash
