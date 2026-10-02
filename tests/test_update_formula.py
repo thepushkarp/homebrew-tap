@@ -1,4 +1,5 @@
 import importlib.util
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,6 +26,7 @@ class ReleaseUpdateTests(unittest.TestCase):
                 (root / "Formula").mkdir()
                 path = root / "Formula" / f"{formula}.rb"
                 original = (ROOT / "Formula" / f"{formula}.rb").read_text()
+                original = re.sub(r'  version "[^"]*"', '  version "0.0.0"', original)
                 path.write_text(original)
                 result = UPDATER.update_from_event(
                     {
@@ -50,6 +52,40 @@ class ReleaseUpdateTests(unittest.TestCase):
                         if not line.strip().startswith(("version ", "sha256 "))
                     ],
                 )
+
+    def test_delayed_releases_preserve_newer_versions_and_checksums(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Formula").mkdir()
+            path = root / "Formula/nalcos.rb"
+            for current, delayed in (
+                ("1.2.4", "1.2.3"),
+                ("2.0.0-alpha.10", "2.0.0-alpha.2"),
+                ("2.0.0", "2.0.0-rc.1"),
+            ):
+                original = f'  version "{current}"\n  sha256 "{"a" * 64}"\n'
+                path.write_text(original)
+                event = {
+                    "action": "nalcos-release",
+                    "client_payload": {
+                        "version": delayed,
+                        "aarch64_sha256": "b" * 64,
+                    },
+                }
+                with self.subTest(current=current, delayed=delayed):
+                    self.assertEqual(
+                        UPDATER.update_from_event(event, root), ("nalcos", current)
+                    )
+                    self.assertEqual(path.read_text(), original)
+                    event["client_payload"]["version"] = current
+                    with self.assertRaisesRegex(ValueError, "conflicting checksums"):
+                        UPDATER.update_from_event(event, root)
+                    self.assertEqual(path.read_text(), original)
+                    event["client_payload"]["aarch64_sha256"] = "a" * 64
+                    self.assertEqual(
+                        UPDATER.update_from_event(event, root), ("nalcos", current)
+                    )
+                    self.assertEqual(path.read_text(), original)
 
     def test_invalid_payloads_do_not_modify_formula(self):
         valid = {

@@ -13,6 +13,17 @@ VERSION = re.compile(r"[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+
 SHA256 = re.compile(r"[0-9a-fA-F]{64}")
 
 
+def version_key(version):
+    if not VERSION.fullmatch(version):
+        raise ValueError(f"unsupported formula version: {version!r}")
+    core, separator, prerelease = version.partition("-")
+    identifiers = tuple(
+        (0, int(part)) if part.isdigit() else (1, part)
+        for part in prerelease.split(".")
+    )
+    return (*map(int, core.split(".")), 0 if separator else 1, identifiers)
+
+
 def update_from_event(event, root):
     action = event.get("action")
     if action not in RELEASES:
@@ -31,16 +42,28 @@ def update_from_event(event, root):
 
     path = root / "Formula" / f"{formula}.rb"
     source = path.read_text()
-    source, versions = re.subn(
-        r'^  version "[^"]*"$', f'  version "{version}"', source, flags=re.MULTILINE
-    )
+    versions = re.findall(r'^  version "([^"]*)"$', source, flags=re.MULTILINE)
     checksum_iter = iter(checksums)
     # Formula checksum order follows its architecture blocks: ARM first, then Intel.
     pattern = r'^(\s+)sha256 "[^"]*"$'
-    if versions != 1 or len(re.findall(pattern, source, flags=re.MULTILINE)) != len(
-        checksums
-    ):
+    if len(versions) != 1 or len(
+        re.findall(pattern, source, flags=re.MULTILINE)
+    ) != len(checksums):
         raise ValueError(f"unexpected version or checksum layout in {path}")
+    current = versions[0]
+    # Delayed dispatches must not overwrite newer releases after a push retry.
+    if version_key(version) < version_key(current):
+        return formula, current
+    if version_key(version) == version_key(current):
+        existing = re.findall(r'^\s+sha256 "([^"]*)"$', source, flags=re.MULTILINE)
+        if [value.lower() for value in existing] != [
+            value.lower() for value in checksums
+        ]:
+            raise ValueError(f"conflicting checksums for published {formula} {current}")
+        return formula, current
+    source = re.sub(
+        r'^  version "[^"]*"$', f'  version "{version}"', source, flags=re.MULTILINE
+    )
     source = re.sub(
         pattern,
         lambda match: f'{match[1]}sha256 "{next(checksum_iter).lower()}"',
@@ -57,7 +80,7 @@ def main():
     if output := os.environ.get("GITHUB_OUTPUT"):
         with Path(output).open("a") as handle:
             handle.write(f"formula={formula}\nversion={version}\n")
-    print(f"Updated {formula} to {version}")
+    print(f"Selected {formula} {version}")
 
 
 if __name__ == "__main__":
