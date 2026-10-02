@@ -1,4 +1,4 @@
-name: Verify Formula
+name: Verify Formulae
 
 on:
   pull_request:
@@ -6,18 +6,26 @@ on:
     branches:
       - main
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   verify:
-    name: Verify mls formula dependencies
+    name: Verify formula syntax and runtime dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
+      - name: Check formula syntax
+        run: for formula in Formula/*.rb; do ruby -c "$formula"; done
+
       - name: Check runtime dependencies
         run: |
           grep -q 'depends_on "ffmpeg"' Formula/mls.rb
           grep -q 'depends_on "mpv"' Formula/mls.rb
+          grep -q 'depends_on "git"' Formula/nalcos.rb
+
+      - name: Test release updates
+        run: python3 -m unittest discover -s tests
