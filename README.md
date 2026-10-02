@@ -37,4 +37,4 @@ The update workflow accepts repository dispatch events with a version (without a
 | `mls-release` | `version`, `aarch64_sha256`, `x86_64_sha256` |
 | `nalcos-release` | `version`, `aarch64_sha256` |
 
-The updater validates the event, version, and checksums before changing the selected formula. Formula syntax and runtime dependencies are checked before committing the update. Release assets must already be available at the formula's GitHub release URLs.
+The updater validates the event, version, and checksums before changing the selected formula. Formula syntax and runtime dependencies are checked before committing the update. Concurrent releases run independently; when another update wins the push, the workflow regenerates its formula on the latest `main` and retries up to five times without force-pushing. Release assets must already be available at the formula's GitHub release URLs.
